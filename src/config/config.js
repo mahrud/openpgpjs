@@ -42,7 +42,7 @@ export default {
   ignore_mdc_error: false, // fail on decrypt if message is not integrity protected
   checksum_required: false, // do not throw error when armor is missing a checksum
   rsa_blinding: true,
-  use_native: true, // use native node.js crypto and Web Crypto apis (if available)
+  use_native: true, //true, // use native node.js crypto and Web Crypto apis (if available)
   zero_copy: false, // use transferable objects between the Web Worker and main thread
   debug: false,
   tolerant: true, // ignore unsupported/unrecognizable packets instead of throwing an error
