@@ -84,7 +84,8 @@ const curves = {
     hashName: 'SHA-256',
     hash: enums.hash.sha256,
     cipher: enums.symmetric.aes128,
-    node: nodeCurves.includes('secp256k1'),
+    node: false, // FIXME nodeCurves.includes('secp256k1'),
+    // this is because jwk-to-pem does not support this curve.
     web: false
   }
 };
