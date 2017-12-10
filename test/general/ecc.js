@@ -2,8 +2,9 @@
 
 var openpgp = typeof window !== 'undefined' && window.openpgp ? window.openpgp : require('../../dist/openpgp');
 
-var chai = require('chai'),
-  expect = chai.expect;
+var chai = require('chai');
+chai.use(require('chai-as-promised'));
+var expect = chai.expect;
 
 describe('Elliptic Curve Cryptography', function () {
   var data = {
@@ -164,8 +165,7 @@ describe('Elliptic Curve Cryptography', function () {
       expect(result).to.exist;
       expect(result.data.trim()).to.equal(data.juliet.message);
       expect(result.signatures).to.have.length(1);
-      expect(result.signatures[0].valid).to.be.true;
-      done();
+      expect(result.signatures[0].valid).to.eventually.be.true.notify(done);
     });
   });
   it('Sign message', function (done) {
@@ -177,8 +177,7 @@ describe('Elliptic Curve Cryptography', function () {
         expect(result).to.exist;
         expect(result.data.trim()).to.equal(data.romeo.message);
         expect(result.signatures).to.have.length(1);
-        expect(result.signatures[0].valid).to.be.true;
-        done();
+        expect(result.signatures[0].valid).to.eventually.be.true.notify(done);
       });
     });
   });

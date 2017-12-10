@@ -2,8 +2,9 @@
 
 var openpgp = typeof window !== 'undefined' && window.openpgp ? window.openpgp : require('../../dist/openpgp');
 
-var chai = require('chai'),
-	expect = chai.expect;
+var chai = require('chai');
+chai.use(require('chai-as-promised'));
+var expect = chai.expect;
 
 describe('API functional testing', function() {
   var util = openpgp.util;
@@ -227,29 +228,29 @@ describe('API functional testing', function() {
   var data = util.str2Uint8Array("foobar");
 
   describe('Sign and verify', function () {
-    it('RSA', function (done) {
+    it('RSA', function () {
       //Originally we passed public and secret MPI separately, now they are joined. Is this what we want to do long term?
       // RSA
-      var RSAsignedData = openpgp.crypto.signature.sign(2, 1, RSApubMPIs.concat(RSAsecMPIs), data);
-      var RSAsignedDataMPI = new openpgp.MPI();
-      RSAsignedDataMPI.read(RSAsignedData);
-      var success = openpgp.crypto.signature.verify(1, 2, [RSAsignedDataMPI], RSApubMPIs, data);
-      expect(success).to.be.true;
-      done();
+      openpgp.crypto.signature.sign(2, 1, RSApubMPIs.concat(RSAsecMPIs), data).then(RSAsignedData => {
+        var RSAsignedDataMPI = new openpgp.MPI();
+        RSAsignedDataMPI.read(RSAsignedData);
+        var success = openpgp.crypto.signature.verify(1, 2, [RSAsignedDataMPI], RSApubMPIs, data);
+        expect(success).to.eventually.be.true;
+      });
     });
 
-    it('DSA', function (done) {
+    it('DSA', function () {
       // DSA
-      var DSAsignedData = util.Uint8Array2str(openpgp.crypto.signature.sign(2, 17, DSApubMPIs.concat(DSAsecMPIs), data));
-
-      var DSAmsgMPIs = [];
-      DSAmsgMPIs[0] = new openpgp.MPI();
-      DSAmsgMPIs[1] = new openpgp.MPI();
-      DSAmsgMPIs[0].read(DSAsignedData.substring(0,34));
-      DSAmsgMPIs[1].read(DSAsignedData.substring(34,68));
-      var success = openpgp.crypto.signature.verify(17, 2, DSAmsgMPIs, DSApubMPIs, data);
-      expect(success).to.be.true;
-      done();
+      openpgp.crypto.signature.sign(2, 17, DSApubMPIs.concat(DSAsecMPIs), data).then(DSAsignedData => {
+        var DSAsignedData = util.Uint8Array2str(DSAsignedData);
+        var DSAmsgMPIs = [];
+        DSAmsgMPIs[0] = new openpgp.MPI();
+        DSAmsgMPIs[1] = new openpgp.MPI();
+        DSAmsgMPIs[0].read(DSAsignedData.substring(0,34));
+        DSAmsgMPIs[1].read(DSAsignedData.substring(34,68));
+        var success = openpgp.crypto.signature.verify(17, 2, DSAmsgMPIs, DSApubMPIs, data);
+        expect(success).to.eventually.be.true;
+      });
     });
   });
 
