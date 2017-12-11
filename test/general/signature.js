@@ -712,7 +712,7 @@ describe("Signature", function() {
     });
   });
 
-  it('Verify signed key', function(done) {
+  it('Verify signed key', function() {
     var signedArmor = [
       '-----BEGIN PGP PUBLIC KEY BLOCK-----',
       'Version: GnuPG v1',
@@ -742,12 +742,12 @@ describe("Signature", function() {
 
     var signedKey = openpgp.key.readArmored(signedArmor).keys[0];
     var signerKey = openpgp.key.readArmored(priv_key_arm1).keys[0];
-    var signatures = signedKey.verifyPrimaryUser([signerKey]);
-    expect(signatures[0].valid).to.be.null;
-    expect(signatures[0].keyid.toHex()).to.equal(signedKey.primaryKey.getKeyId().toHex());
-    expect(signatures[1].valid).to.be.true;
-    expect(signatures[1].keyid.toHex()).to.equal(signerKey.primaryKey.getKeyId().toHex());
-    done();
+    return signedKey.verifyPrimaryUser([signerKey]).then(signatures => {
+      expect(signatures[0].valid).to.be.null;
+      expect(signatures[0].keyid.toHex()).to.equal(signedKey.primaryKey.getKeyId().toHex());
+      expect(signatures[1].valid).to.be.true;
+      expect(signatures[1].keyid.toHex()).to.equal(signerKey.primaryKey.getKeyId().toHex());
+    });
   });
 
 });
