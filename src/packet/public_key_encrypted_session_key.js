@@ -132,12 +132,12 @@ PublicKeyEncryptedSessionKey.prototype.encrypt = async function (key) {
  *            Private key with secMPIs unlocked
  * @return {String} The unencrypted session key
  */
-PublicKeyEncryptedSessionKey.prototype.decrypt = function (key) {
-  var result = crypto.publicKeyDecrypt(
+PublicKeyEncryptedSessionKey.prototype.decrypt = async function (key) {
+  var result = (await crypto.publicKeyDecrypt(
     this.publicKeyAlgorithm,
     key.params,
     this.encrypted,
-    key.fingerprint).toBytes();
+    key.fingerprint)).toBytes();
 
   var checksum;
   var decoded;
@@ -157,6 +157,7 @@ PublicKeyEncryptedSessionKey.prototype.decrypt = function (key) {
     this.sessionKey = key;
     this.sessionKeyAlgorithm =
       enums.read(enums.symmetric, decoded.charCodeAt(0));
+    return true;
   }
 };
 
