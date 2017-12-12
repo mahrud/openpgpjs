@@ -664,12 +664,11 @@ Key.prototype.signPrimaryUser = async function(privateKeys) {
  * @return {module:key~Key} new public key with new certificate signature
  */
 Key.prototype.signAllUsers = async function(privateKeys) {
-  var primaryKey = this.primaryKey;
-  var users = await Promise.all(this.users.map(async function(user) {
-    await user.sign(primaryKey, privateKeys);
-  }));
+  var that = this;
   var key = new Key(this.toPacketlist());
-  key.users = users;
+  key.users = await Promise.all(this.users.map(function(user) {
+    return user.sign(that.primaryKey, privateKeys);
+  }));
   return key;
 };
 
@@ -691,17 +690,20 @@ Key.prototype.verifyPrimaryUser = function(keys) {
  * @param  {Array<module:key~Key>} keys array of keys to verify certificate signatures
  * @return {Array<({userid: String, keyid: module:type/keyid, valid: Boolean})>} list of userid, signer's keyid and validity of signature
  */
-Key.prototype.verifyAllUsers = function(keys) {
-  var primaryKey = this.primaryKey;
-  return this.users.reduce(async function(signatures, user) {
-    return signatures.concat(
-      await Promise.all(user.verifyAllSignatures(primaryKey, keys).map(signature => ({
+Key.prototype.verifyAllUsers = async function(keys) {
+  var that = this;
+  var results = [];
+  await Promise.all(this.users.map(async function(user) {
+    var signatures = await user.verifyAllSignatures(that.primaryKey, keys);
+    signatures.forEach(signature => {
+      results.push({
         userid: user.userId.userid,
         keyid: signature.keyid,
         valid: signature.valid
-      })))
-    );
-  }, []);
+      });
+    });
+  }));
+  return results;
 };
 
 /**
@@ -834,7 +836,7 @@ User.prototype.sign = async function(primaryKey, privateKeys) {
     await signaturePacket.sign(signingKeyPacket, dataToSign);
     user.otherCertifications.push(signaturePacket);
   }));
-  user.update(this, primaryKey);
+  await user.update(this, primaryKey);
   return user;
 };
 

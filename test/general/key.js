@@ -824,57 +824,68 @@ describe('Key', function() {
     });
   });
 
-  it('update() - merge private key into public key', function(done) {
+  it('update() - merge private key into public key', function() {
     var source = openpgp.key.readArmored(priv_key_rsa).keys[0];
     var dest = openpgp.key.readArmored(twoKeys).keys[0];
     expect(dest.isPublic()).to.be.true;
-    dest.update(source).then(() => {
+    return dest.update(source).then(() => {
       expect(dest.isPrivate()).to.be.true;
-      expect(source.verifyPrimaryKey()).to.eventually.equal(dest.verifyPrimaryKey());
-      expect(source.users[0].verify(source.primaryKey)
-            ).to.eventually.equal(
-              dest.users[0].verify(dest.primaryKey));
-      expect(source.subKeys[0].verify(source.primaryKey)
-            ).to.eventually.equal(
-              dest.subKeys[0].verify(dest.primaryKey));
-      done()
+      return Promise.all([
+        dest.verifyPrimaryKey().then(result => {
+          expect(source.verifyPrimaryKey()).to.eventually.equal(result);
+        }),
+        dest.users[0].verify(dest.primaryKey).then(result => {
+          expect(source.users[0].verify(source.primaryKey)).to.eventually.equal(result);
+        }),
+        dest.subKeys[0].verify(dest.primaryKey).then(result => {
+          expect(source.subKeys[0].verify(source.primaryKey)).to.eventually.equal(result);
+        })
+      ]);
     });
   });
 
-  it('update() - merge private key into public key - no subkeys', function(done) {
+  it('update() - merge private key into public key - no subkeys', function() {
     var source = openpgp.key.readArmored(priv_key_rsa).keys[0];
     var dest = openpgp.key.readArmored(twoKeys).keys[0];
     source.subKeys = null;
     dest.subKeys = null;
     expect(dest.isPublic()).to.be.true;
-    dest.update(source).then(() => {
+    return dest.update(source).then(() => {
       expect(dest.isPrivate()).to.be.true;
-      expect(source.verifyPrimaryKey()).to.eventually.equal(dest.verifyPrimaryKey());
-      expect(source.users[0].verify(source.primaryKey)
-            ).to.eventually.equal(
-              dest.users[0].verify(dest.primaryKey));
-      done();
+      return Promise.all([
+        dest.verifyPrimaryKey().then(result => {
+          expect(source.verifyPrimaryKey()).to.eventually.equal(result);
+        }),
+        dest.users[0].verify(dest.primaryKey).then(result => {
+          expect(source.users[0].verify(source.primaryKey)).to.eventually.equal(result);
+        })
+      ]);
     });
   });
 
-  it('update() - merge private key into public key - mismatch throws error', function() {
+  it('update() - merge private key into public key - mismatch throws error', function(done) {
     var source = openpgp.key.readArmored(priv_key_rsa).keys[0];
     var dest = openpgp.key.readArmored(twoKeys).keys[0];
     source.subKeys = null;
     expect(dest.subKeys).to.exist;
     expect(dest.isPublic()).to.be.true;
-    expect(dest.update.bind(dest, source)).to.throw('Cannot update public key with private key if subkey mismatch');
+    expect(dest.update.bind(dest, source)())
+      .to.be.rejectedWith('Cannot update public key with private key if subkey mismatch').notify(done);
   });
 
-  it('update() - merge subkey binding signatures', function() {
+  it('update() - merge subkey binding signatures', function(done) {
     var source = openpgp.key.readArmored(pgp_desktop_pub).keys[0];
     var dest = openpgp.key.readArmored(pgp_desktop_priv).keys[0];
     expect(source.subKeys[0].bindingSignatures[0]).to.exist;
-    expect(source.subKeys[0].verify(source.primaryKey)).to.equal(openpgp.enums.keyStatus.valid);
+    expect(source.subKeys[0].verify(source.primaryKey))
+      .to.eventually.equal(openpgp.enums.keyStatus.valid);
     expect(dest.subKeys[0].bindingSignatures[0]).to.not.exist;
-    dest.update(source);
-    expect(dest.subKeys[0].bindingSignatures[0]).to.exist;
-    expect(dest.subKeys[0].verify(source.primaryKey)).to.equal(openpgp.enums.keyStatus.valid);
+    dest.update(source).then(() => {
+      expect(dest.subKeys[0].bindingSignatures[0]).to.exist;
+      expect(dest.subKeys[0].verify(source.primaryKey))
+        .to.eventually.equal(openpgp.enums.keyStatus.valid);
+      done();
+    });
   });
 
   it('getPreferredSymAlgo() - one key - AES256', function() {
@@ -1027,15 +1038,16 @@ describe('Key', function() {
     var key = openpgp.key.readArmored(pub_sig_test).keys[0];
     var privateKey = openpgp.key.readArmored(priv_key_rsa).keys[0];
     privateKey.decrypt('hello world');
-    key = key.signPrimaryUser([privateKey]);
-    var signatures = key.verifyPrimaryUser([privateKey]);
-    expect(true).to.be.false;
-    expect(signatures.length).to.equal(2);
-    expect(signatures[0].keyid.toHex()).to.equal(key.getSigningKeyPacket().getKeyId().toHex());
-    expect(signatures[0].valid).to.be.null;
-    expect(signatures[1].keyid.toHex()).to.equal(privateKey.getSigningKeyPacket().getKeyId().toHex());
-    expect(signatures[1].valid).to.be.true;
-    done();
+    key.signPrimaryUser([privateKey]).then(key => {
+      key.verifyPrimaryUser([privateKey]).then(signatures => {
+        expect(signatures.length).to.equal(2);
+        expect(signatures[0].keyid.toHex()).to.equal(key.getSigningKeyPacket().getKeyId().toHex());
+        expect(signatures[0].valid).to.be.null;
+        expect(signatures[1].keyid.toHex()).to.equal(privateKey.getSigningKeyPacket().getKeyId().toHex());
+        expect(signatures[1].valid).to.be.true;
+        done();
+      });
+    });
   });
 
   it('Sign key and verify with wrong key - primary user', function(done) {
@@ -1043,36 +1055,40 @@ describe('Key', function() {
     var privateKey = openpgp.key.readArmored(priv_key_rsa).keys[0];
     var wrongKey = openpgp.key.readArmored(wrong_key).keys[0];
     privateKey.decrypt('hello world');
-    key = key.signPrimaryUser([privateKey]);
-    var signatures = key.verifyPrimaryUser([wrongKey]);
-    expect(signatures.length).to.equal(2);
-    expect(signatures[0].keyid.toHex()).to.equal(key.getSigningKeyPacket().getKeyId().toHex());
-    expect(signatures[0].valid).to.be.null;
-    expect(signatures[1].keyid.toHex()).to.equal(privateKey.getSigningKeyPacket().getKeyId().toHex());
-    expect(signatures[1].valid).to.be.null;
-    done();
+    key.signPrimaryUser([privateKey]).then(key => {
+      key.verifyPrimaryUser([wrongKey]).then(signatures => {
+        expect(signatures.length).to.equal(2);
+        expect(signatures[0].keyid.toHex()).to.equal(key.getSigningKeyPacket().getKeyId().toHex());
+        expect(signatures[0].valid).to.be.null;
+        expect(signatures[1].keyid.toHex()).to.equal(privateKey.getSigningKeyPacket().getKeyId().toHex());
+        expect(signatures[1].valid).to.be.null;
+        done();
+      });
+    });
   });
 
   it('Sign and verify key - all users', function(done) {
     var key = openpgp.key.readArmored(multi_uid_key).keys[0];
     var privateKey = openpgp.key.readArmored(priv_key_rsa).keys[0];
     privateKey.decrypt('hello world');
-    key = key.signAllUsers([privateKey]);
-    var signatures = key.verifyAllUsers([privateKey]);
-    expect(signatures.length).to.equal(4);
-    expect(signatures[0].userid).to.equal(key.users[0].userId.userid);
-    expect(signatures[0].keyid.toHex()).to.equal(key.getSigningKeyPacket().getKeyId().toHex());
-    expect(signatures[0].valid).to.be.null;
-    expect(signatures[1].userid).to.equal(key.users[0].userId.userid);
-    expect(signatures[1].keyid.toHex()).to.equal(privateKey.getSigningKeyPacket().getKeyId().toHex());
-    expect(signatures[1].valid).to.be.true;
-    expect(signatures[2].userid).to.equal(key.users[1].userId.userid);
-    expect(signatures[2].keyid.toHex()).to.equal(key.getSigningKeyPacket().getKeyId().toHex());
-    expect(signatures[2].valid).to.be.null;
-    expect(signatures[3].userid).to.equal(key.users[1].userId.userid);
-    expect(signatures[3].keyid.toHex()).to.equal(privateKey.getSigningKeyPacket().getKeyId().toHex());
-    expect(signatures[3].valid).to.be.true;
-    done();
+    key.signAllUsers([privateKey]).then(key => {
+      key.verifyAllUsers([privateKey]).then(signatures => {
+        expect(signatures.length).to.equal(4);
+        expect(signatures[0].userid).to.equal(key.users[0].userId.userid);
+        expect(signatures[0].keyid.toHex()).to.equal(key.getSigningKeyPacket().getKeyId().toHex());
+        expect(signatures[0].valid).to.be.null;
+        expect(signatures[1].userid).to.equal(key.users[0].userId.userid);
+        expect(signatures[1].keyid.toHex()).to.equal(privateKey.getSigningKeyPacket().getKeyId().toHex());
+        expect(signatures[1].valid).to.be.true;
+        expect(signatures[2].userid).to.equal(key.users[1].userId.userid);
+        expect(signatures[2].keyid.toHex()).to.equal(key.getSigningKeyPacket().getKeyId().toHex());
+        expect(signatures[2].valid).to.be.null;
+        expect(signatures[3].userid).to.equal(key.users[1].userId.userid);
+        expect(signatures[3].keyid.toHex()).to.equal(privateKey.getSigningKeyPacket().getKeyId().toHex());
+        expect(signatures[3].valid).to.be.true;
+        done();
+      });
+    });
   });
 
   it('Sign key and verify with wrong key - all users', function(done) {
@@ -1080,22 +1096,24 @@ describe('Key', function() {
     var privateKey = openpgp.key.readArmored(priv_key_rsa).keys[0];
     var wrongKey = openpgp.key.readArmored(wrong_key).keys[0];
     privateKey.decrypt('hello world');
-    key = key.signAllUsers([privateKey]);
-    var signatures = key.verifyAllUsers([wrongKey]);
-    expect(signatures.length).to.equal(4);
-    expect(signatures[0].userid).to.equal(key.users[0].userId.userid);
-    expect(signatures[0].keyid.toHex()).to.equal(key.getSigningKeyPacket().getKeyId().toHex());
-    expect(signatures[0].valid).to.be.null;
-    expect(signatures[1].userid).to.equal(key.users[0].userId.userid);
-    expect(signatures[1].keyid.toHex()).to.equal(privateKey.getSigningKeyPacket().getKeyId().toHex());
-    expect(signatures[1].valid).to.be.null;
-    expect(signatures[2].userid).to.equal(key.users[1].userId.userid);
-    expect(signatures[2].keyid.toHex()).to.equal(key.getSigningKeyPacket().getKeyId().toHex());
-    expect(signatures[2].valid).to.be.null;
-    expect(signatures[3].userid).to.equal(key.users[1].userId.userid);
-    expect(signatures[3].keyid.toHex()).to.equal(privateKey.getSigningKeyPacket().getKeyId().toHex());
-    expect(signatures[3].valid).to.be.null;
-    done();
+    key.signAllUsers([privateKey]).then(key => {
+      key.verifyAllUsers([wrongKey]).then(signatures => {
+        expect(signatures.length).to.equal(4);
+        expect(signatures[0].userid).to.equal(key.users[0].userId.userid);
+        expect(signatures[0].keyid.toHex()).to.equal(key.getSigningKeyPacket().getKeyId().toHex());
+        expect(signatures[0].valid).to.be.null;
+        expect(signatures[1].userid).to.equal(key.users[0].userId.userid);
+        expect(signatures[1].keyid.toHex()).to.equal(privateKey.getSigningKeyPacket().getKeyId().toHex());
+        expect(signatures[1].valid).to.be.null;
+        expect(signatures[2].userid).to.equal(key.users[1].userId.userid);
+        expect(signatures[2].keyid.toHex()).to.equal(key.getSigningKeyPacket().getKeyId().toHex());
+        expect(signatures[2].valid).to.be.null;
+        expect(signatures[3].userid).to.equal(key.users[1].userId.userid);
+        expect(signatures[3].keyid.toHex()).to.equal(privateKey.getSigningKeyPacket().getKeyId().toHex());
+        expect(signatures[3].valid).to.be.null;
+        done();
+      });
+    });
   });
   it('Reformat key without passphrase', function() {
     var userId1 = 'test1 <a@b.com>';

@@ -192,16 +192,17 @@ describe("Packet", function() {
       enc.publicKeyAlgorithm = 'rsa_encrypt';
       enc.sessionKeyAlgorithm = 'aes256';
       enc.publicKeyId.bytes = '12345678';
-      enc.encrypt({ params: mpi });
+      enc.encrypt({ params: mpi }).then(() => {
 
-      msg.push(enc);
+        msg.push(enc);
 
-      msg2.read(msg.write());
+        msg2.read(msg.write());
 
-      msg2[0].decrypt({ params: mpi });
+        msg2[0].decrypt({ params: mpi });
 
-      expect(stringify(msg2[0].sessionKey)).to.equal(stringify(enc.sessionKey));
-      expect(msg2[0].sessionKeyAlgorithm).to.equal(enc.sessionKeyAlgorithm);
+        expect(stringify(msg2[0].sessionKey)).to.equal(stringify(enc.sessionKey));
+        expect(msg2[0].sessionKeyAlgorithm).to.equal(enc.sessionKeyAlgorithm);
+      });
     });
   });
 
@@ -240,12 +241,13 @@ describe("Packet", function() {
     enc.sessionKeyAlgorithm = 'aes256';
     enc.publicKeyId.bytes = '12345678';
 
-    enc.encrypt(key);
+    enc.encrypt(key).then(() => {
 
-    enc.decrypt(key);
+      enc.decrypt(key);
 
-    expect(stringify(enc.sessionKey)).to.equal(stringify(secret));
-    done();
+      expect(stringify(enc.sessionKey)).to.equal(stringify(secret));
+      done();
+    });
   });
 
   it('Public key encrypted packet (reading, GPG)', function(done) {

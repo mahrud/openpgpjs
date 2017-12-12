@@ -231,6 +231,7 @@ export function encrypt({ data, publicKeys, privateKeys, passwords, sessionKey, 
       result.sessionKey = encrypted.sessionKey;
     }
     return result;
+
   }).catch(onError.bind(null, 'Error encrypting message'));
 }
 
@@ -302,7 +303,6 @@ export function sign({ data, privateKeys, armor=true, detached=false}) {
   }
 
   var result = {};
-//  return Promise.resolve().then(() => {
   return Promise.resolve().then(async function() {
     var message;
 
@@ -322,13 +322,16 @@ export function sign({ data, privateKeys, armor=true, detached=false}) {
     } else {
       message = await message.sign(privateKeys);
     }
+    return message;
 
+  }).then(signed => {
     if (armor) {
-      result.data = message.armor();
+      result.data = signed.armor();
     } else {
-      result.message = message;
+      result.message = signed;
     }
     return result;
+
   }).catch(onError.bind(null, 'Error signing cleartext message'));
 }
 
@@ -349,13 +352,15 @@ export function verify({ message, publicKeys, signature=null }) {
     return asyncProxy.delegate('verify', { message, publicKeys, signature });
   }
 
-  var result = {};
   return Promise.resolve().then(async function() {
+
+    var result = {};
     if (cleartext.CleartextMessage.prototype.isPrototypeOf(message)) {
       result.data = message.getText();
     } else {
       result.data = message.getLiteralData();
     }
+
     if (signature) {
       //detached signature
       result.signatures = await message.verifyDetached(signature, publicKeys);
