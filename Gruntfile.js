@@ -46,7 +46,7 @@ module.exports = function(grunt) {
           browserifyOptions: {
             standalone: 'openpgp'
           },
-          external: [ 'crypto', 'buffer', 'node-localstorage', 'node-fetch', 'asn1.js' ],
+          external: [ 'crypto', 'node-localstorage', 'node-fetch' ],
           transform: [
             ["babelify", {
               plugins: ["transform-async-to-generator",
@@ -71,7 +71,7 @@ module.exports = function(grunt) {
             debug: true,
             standalone: 'openpgp'
           },
-          external: [ 'crypto', 'buffer', 'node-localstorage', 'node-fetch', 'asn1.js'],
+          external: [ 'crypto', 'node-localstorage', 'node-fetch'],
           transform: [
             ["babelify", {
               plugins: ["transform-async-to-generator",
@@ -97,7 +97,7 @@ module.exports = function(grunt) {
           'test/lib/unittests-bundle.js': [ './test/unittests.js' ]
         },
         options: {
-          external: [ 'crypto', 'buffer' , 'node-localstorage', 'node-fetch', 'asn1.js', 'openpgp', '../../dist/openpgp' ]
+          external: [ 'crypto', 'node-localstorage', 'node-fetch', 'openpgp', '../../dist/openpgp' ]
         }
       }
     },
@@ -306,6 +306,6 @@ module.exports = function(grunt) {
   grunt.registerTask('test', [ 'eslint', 'mochaTest']);
   grunt.registerTask('coverage', ['mocha_istanbul:coverage']);
   grunt.registerTask('saucelabs', ['default', 'copy:browsertest', 'connect:test', 'saucelabs-mocha']);
-  grunt.registerTask('browsertest', ['copy:browsertest', 'connect:test', 'keepalive']);
+  grunt.registerTask('browsertest', ['browserify', 'copy:browsertest', 'connect:test', 'keepalive']);
 
 };
