@@ -373,6 +373,7 @@ describe('API functional testing', function() {
       ).then(RSAEncryptedData => {
 
         openpgp.crypto.publicKeyDecrypt("rsa_encrypt_sign", RSApubMPIs.concat(RSAsecMPIs), RSAEncryptedData).then(data => {
+          data = data.write();
           data = util.Uint8Array2str(data.subarray(2, data.length));
 
           var result = openpgp.crypto.pkcs1.eme.decode(data, RSApubMPIs[0].byteLength());
@@ -390,12 +391,14 @@ describe('API functional testing', function() {
         "elgamal", ElgamalpubMPIs, ElgamalUnencryptedData
       ).then(ElgamalEncryptedData => {
 
-        var data = openpgp.crypto.publicKeyDecrypt("elgamal", ElgamalpubMPIs.concat(ElgamalsecMPIs), ElgamalEncryptedData).write();
-        data = util.Uint8Array2str(data.subarray(2, data.length));
+        var data = openpgp.crypto.publicKeyDecrypt("elgamal", ElgamalpubMPIs.concat(ElgamalsecMPIs), ElgamalEncryptedData).then(data => {
+          data = data.write();
+          data = util.Uint8Array2str(data.subarray(2, data.length));
 
-        var result = openpgp.crypto.pkcs1.eme.decode(data, ElgamalpubMPIs[0].byteLength());
-        expect(result).to.equal(symmKey);
-        done();
+          var result = openpgp.crypto.pkcs1.eme.decode(data, ElgamalpubMPIs[0].byteLength());
+          expect(result).to.equal(symmKey);
+          done();
+        });
       });
     });
   });

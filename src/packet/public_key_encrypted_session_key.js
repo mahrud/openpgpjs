@@ -155,9 +155,7 @@ PublicKeyEncryptedSessionKey.prototype.decrypt = async function (key) {
     throw new Error('Checksum mismatch');
   } else {
     this.sessionKey = key;
-    this.sessionKeyAlgorithm =
-      enums.read(enums.symmetric, decoded.charCodeAt(0));
-    return true;
+    this.sessionKeyAlgorithm = enums.read(enums.symmetric, decoded.charCodeAt(0));
   }
 };
 
