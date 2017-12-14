@@ -31,6 +31,7 @@ import jwkToPem from 'jwk-to-pem';
 
 import curves from './curves.js';
 import BigInteger from '../jsbn.js';
+import b64 from '../../../encoding/base64';
 import config from '../../../config';
 import enums from '../../../enums.js';
 import util from '../../../util.js'
@@ -38,7 +39,7 @@ import util from '../../../util.js'
 const webCrypto = util.getWebCrypto();
 const nodeCrypto = util.getNodeCrypto();
 
-var ECDSASignature = ASN1.define('ecdsa-sig', function() {
+var ECDSASignature = ASN1.define('ECDSASignature', function() {
   this.seq().obj(
     this.key('r').int(),  // FIXME int or BN?
     this.key('s').int()   // FIXME int or BN?
@@ -115,9 +116,9 @@ async function webSign(curve, hash_algo, m, keyPair) {
       {
         "kty": "EC",
         "crv": curve.namedCurve,
-        "x": keyPair.getPublic().getX().toBuffer().base64Slice(),
-        "y": keyPair.getPublic().getY().toBuffer().base64Slice(),
-        "d": keyPair.getPrivate().toBuffer().base64Slice(),
+        "x": b64.s2r(new Uint8Array(keyPair.getPublic().x.toArray()), null, 'base64url'),
+        "y": b64.s2r(new Uint8Array(keyPair.getPublic().y.toArray()), null, 'base64url'),
+        "d": b64.s2r(new Uint8Array(keyPair.getPrivate()), null, 'base64url'),
         "use": "sig",
         "kid": "ECDSA Private Key"
       },
@@ -151,8 +152,8 @@ async function webVerify(curve, hash_algo, signature, m, publicKey) {
       {
         "kty": "EC",
         "crv": curve.namedCurve,
-        "x": publicKey.getX().toBuffer().base64Slice(),
-        "y": publicKey.getY().toBuffer().base64Slice(),
+        "x": b64.s2r(new Uint8Array(publicKey.x.toArray()), null, 'base64url'),
+        "y": b64.s2r(new Uint8Array(publicKey.y.toArray()), null, 'base64url'),
         "use": "sig",
         "kid": "ECDSA Public Key"
       },
