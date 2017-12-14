@@ -46,7 +46,7 @@ module.exports = function(grunt) {
           browserifyOptions: {
             standalone: 'openpgp'
           },
-          external: [ 'crypto', 'node-localstorage', 'node-fetch' ],
+          external: [ 'crypto', 'buffer', 'node-localstorage', 'node-fetch', 'asn1.js' ],
           transform: [
             ["babelify", {
               plugins: ["transform-async-to-generator",
@@ -71,7 +71,32 @@ module.exports = function(grunt) {
             debug: true,
             standalone: 'openpgp'
           },
-          external: [ 'crypto', 'node-localstorage', 'node-fetch'],
+          external: [ 'crypto', 'buffer', 'node-localstorage', 'node-fetch', 'asn1.js' ],
+          transform: [
+            ["babelify", {
+              plugins: ["transform-async-to-generator",
+                        "syntax-async-functions",
+                        "transform-regenerator",
+                        "transform-runtime"],
+              ignore: ['*.min.js'],
+              presets: [
+                "es2015"
+              ]
+            }]
+          ],
+          plugin: [ 'browserify-derequire' ]
+        }
+      },
+      openpgp_browser: {
+        files: {
+          'dist/openpgp_browser.js': [ './src/index.js' ]
+        },
+        options: {
+          browserifyOptions: {
+            debug: true,
+            standalone: 'openpgp'
+          },
+          external: [ 'crypto', 'node-localstorage', 'node-fetch' ],
           transform: [
             ["babelify", {
               plugins: ["transform-async-to-generator",
@@ -190,7 +215,7 @@ module.exports = function(grunt) {
       }
     },
     copy: {
-      browsertest: {
+      browser: {
         expand: true,
         flatten: true,
         cwd: 'node_modules/',
@@ -305,7 +330,7 @@ module.exports = function(grunt) {
   // Test/Dev tasks
   grunt.registerTask('test', [ 'eslint', 'mochaTest']);
   grunt.registerTask('coverage', ['mocha_istanbul:coverage']);
-  grunt.registerTask('saucelabs', ['default', 'copy:browsertest', 'connect:test', 'saucelabs-mocha']);
-  grunt.registerTask('browsertest', ['browserify', 'copy:browsertest', 'connect:test', 'keepalive']);
+  grunt.registerTask('saucelabs', ['default', 'copy:browser', 'connect:test', 'saucelabs-mocha']);
+  grunt.registerTask('browsertest', ['browserify:openpgp_browser', 'copy:browser', 'connect:test', 'keepalive']);
 
 };

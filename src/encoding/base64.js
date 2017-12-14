@@ -46,13 +46,13 @@ function s2r(t, o, u) {
     } else if (s === 2) {
       r.push(b64.charAt(a | ((c >> 6) & 3)));
       l += 1;
-      if ((l % 60) === 0 && u !== 'base64url') {
+      if ((l % 60) === 0 && !u) {
         r.push("\n");
       }
       r.push(b64.charAt(c & 63));
     }
     l += 1;
-    if ((l % 60) === 0 && u !== 'base64url') {
+    if ((l % 60) === 0 && !u) {
       r.push("\n");
     }
 
@@ -64,7 +64,7 @@ function s2r(t, o, u) {
   if (s > 0) {
     r.push(b64.charAt(a));
     l += 1;
-    if ((l % 60) === 0 && u !== 'base64url') {
+    if ((l % 60) === 0 && !u) {
       r.push("\n");
     }
     if (u !== 'base64url') {
@@ -73,7 +73,7 @@ function s2r(t, o, u) {
     }
   }
   if (s === 1 && u !== 'base64url') {
-    if ((l % 60) === 0) {
+    if ((l % 60) === 0 && !u) {
       r.push("\n");
     }
     r.push('=');

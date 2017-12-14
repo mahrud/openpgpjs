@@ -31,10 +31,10 @@ import jwkToPem from 'jwk-to-pem';
 
 import curves from './curves.js';
 import BigInteger from '../jsbn.js';
-import b64 from '../../../encoding/base64';
 import config from '../../../config';
 import enums from '../../../enums.js';
-import util from '../../../util.js'
+import util from '../../../util.js';
+import base64 from '../../../encoding/base64.js';
 
 const webCrypto = util.getWebCrypto();
 const nodeCrypto = util.getNodeCrypto();
@@ -116,9 +116,9 @@ async function webSign(curve, hash_algo, m, keyPair) {
       {
         "kty": "EC",
         "crv": curve.namedCurve,
-        "x": b64.s2r(new Uint8Array(keyPair.getPublic().x.toArray()), null, 'base64url'),
-        "y": b64.s2r(new Uint8Array(keyPair.getPublic().y.toArray()), null, 'base64url'),
-        "d": b64.s2r(new Uint8Array(keyPair.getPrivate()), null, 'base64url'),
+        "x": base64.encode(new Uint8Array(keyPair.getPublic().getX().toArray()), null, 'base64url'),
+        "y": base64.encode(new Uint8Array(keyPair.getPublic().getY().toArray()), null, 'base64url'),
+        "d": base64.encode(new Uint8Array(keyPair.getPrivate()), null, 'base64url'),
         "use": "sig",
         "kid": "ECDSA Private Key"
       },
@@ -152,8 +152,8 @@ async function webVerify(curve, hash_algo, signature, m, publicKey) {
       {
         "kty": "EC",
         "crv": curve.namedCurve,
-        "x": b64.s2r(new Uint8Array(publicKey.x.toArray()), null, 'base64url'),
-        "y": b64.s2r(new Uint8Array(publicKey.y.toArray()), null, 'base64url'),
+        "x": base64.encode(new Uint8Array(publicKey.getX().toArray()), null, 'base64url'),
+        "y": base64.encode(new Uint8Array(publicKey.getY().toArray()), null, 'base64url'),
         "use": "sig",
         "kid": "ECDSA Public Key"
       },
@@ -190,9 +190,9 @@ async function nodeSign(curve, hash_algo, message, keyPair) {
     {
       "kty": "EC",
       "crv": curve.namedCurve,
-      "x": keyPair.getPublic().getX().toBuffer().base64Slice(),
-      "y": keyPair.getPublic().getY().toBuffer().base64Slice(),
-      "d": keyPair.getPrivate().toBuffer().base64Slice(),
+      "x": base64.encode(new Uint8Array(keyPair.getPublic().getX().toArray())),
+      "y": base64.encode(new Uint8Array(keyPair.getPublic().getY().toArray())),
+      "d": base64.encode(new Uint8Array(keyPair.getPrivate().toArray())),
       "use": "sig",
       "kid": "ECDSA Private Key"
     },
@@ -224,8 +224,8 @@ async function nodeVerify(curve, hash_algo, signature, message, publicKey) {
     {
       "kty": "EC",
       "crv": curve.namedCurve,
-      "x": publicKey.getX().toBuffer().base64Slice(),
-      "y": publicKey.getY().toBuffer().base64Slice(),
+      "x": base64.encode(new Uint8Array(publicKey.getX().toArray())),
+      "y": base64.encode(new Uint8Array(publicKey.getY().toArray())),
       "use": "sig",
       "kid": "ECDSA Public Key"
     },

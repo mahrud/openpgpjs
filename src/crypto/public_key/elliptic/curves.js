@@ -32,10 +32,10 @@ import ASN1 from 'asn1.js';
 import {ec as EC} from 'elliptic';
 import {KeyPair} from './key.js';
 import BigInteger from '../jsbn.js';
-import b64 from '../../../encoding/base64';
 import config from '../../../config';
 import enums from '../../../enums.js';
 import util from '../../../util.js';
+import base64 from '../../../encoding/base64.js';
 
 const webCrypto = util.getWebCrypto();
 const nodeCrypto = util.getNodeCrypto();
@@ -186,15 +186,16 @@ async function webGenKeyPair(namedCurve, algorithm) {
       true,
       algorithm === "ECDH" ? ["deriveKey", "deriveBits"] : ["sign", "verify"]
     );
+
     var privateKey = await webCrypto.exportKey("jwk", webCryptoKey.privateKey);
     var publicKey = await webCrypto.exportKey("jwk", webCryptoKey.publicKey);
-    
+
     return {
       pub: {
-        x: b64.r2s(publicKey.x, 'base64url'),
-        y: b64.r2s(publicKey.y, 'base64url')
+        x: base64.decode(publicKey.x, 'base64url'),
+        y: base64.decode(publicKey.y, 'base64url')
       },
-      priv: b64.r2s(privateKey.d, 'base64url')
+      priv: base64.decode(privateKey.d, 'base64url')
     };
   } catch(err) {
     throw new Error(err);
