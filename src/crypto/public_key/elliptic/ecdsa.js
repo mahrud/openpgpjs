@@ -122,7 +122,7 @@ async function webSign(curve, hash_algo, message, keyPair) {
       "crv": curve.namedCurve,
       "x": base64.encode(new Uint8Array(keyPair.getPublic().getX().toArray()), null, 'base64url'),
       "y": base64.encode(new Uint8Array(keyPair.getPublic().getY().toArray()), null, 'base64url'),
-      "d": base64.encode(new Uint8Array(keyPair.getPrivate()), null, 'base64url'),
+      "d": base64.encode(new Uint8Array(keyPair.getPrivate().toArray()), null, 'base64url'),
       "use": "sig",
       "kid": "ECDSA Private Key"
     },

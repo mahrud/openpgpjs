@@ -972,7 +972,7 @@ describe('OpenPGP.js public api tests', function() {
             publicKeys: publicKey.keys
           };
           return openpgp.sign(signOpt).then(function(signed) {
-            verifyOpt.message = openpgp.cleartext.readArmored(signed.data);
+            verifyOpt.message = new openpgp.cleartext.CleartextMessage(plaintext);
             verifyOpt.signature = openpgp.signature.readArmored(signed.signature);
             return openpgp.verify(verifyOpt);
           }).then(function(verified) {
@@ -1012,7 +1012,7 @@ describe('OpenPGP.js public api tests', function() {
             publicKeys: openpgp.key.readArmored(wrong_pubkey).keys
           };
           return openpgp.sign(signOpt).then(function(signed) {
-            verifyOpt.message = openpgp.cleartext.readArmored(signed.data);
+            verifyOpt.message = new openpgp.cleartext.CleartextMessage(plaintext);
             verifyOpt.signature = openpgp.signature.readArmored(signed.signature);
             return openpgp.verify(verifyOpt);
           }).then(function(verified) {
@@ -1054,7 +1054,7 @@ describe('OpenPGP.js public api tests', function() {
             publicKeys: publicKey.keys
           };
           return openpgp.sign(signOpt).then(function(signed) {
-            verifyOpt.message = signed.message;
+            verifyOpt.message = new openpgp.cleartext.CleartextMessage(plaintext);
             verifyOpt.signature = signed.signature;
             return openpgp.verify(verifyOpt);
           }).then(function(verified) {

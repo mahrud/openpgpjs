@@ -321,14 +321,11 @@ export function sign({ data, privateKeys, armor=true, detached=false}) {
       }
     } else {
       message = await message.sign(privateKeys);
-    }
-    return message;
-
-  }).then(signed => {
-    if (armor) {
-      result.data = signed.armor();
-    } else {
-      result.message = signed;
+      if (armor) {
+        result.data = message.armor();
+      } else {
+        result.message = message;
+      }
     }
     return result;
 
