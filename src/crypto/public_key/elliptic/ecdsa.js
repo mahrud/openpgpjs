@@ -112,6 +112,7 @@ module.exports = {
 
 
 async function webSign(curve, hash_algo, message, keyPair) {
+  var l = curve.pointSize;
   if (typeof message === 'string') {
     message = util.str2Uint8Array(message);
   }
@@ -120,9 +121,9 @@ async function webSign(curve, hash_algo, message, keyPair) {
     {
       "kty": "EC",
       "crv": curve.namedCurve,
-      "x": base64.encode(new Uint8Array(keyPair.getPublic().getX().toArray()), null, 'base64url'),
-      "y": base64.encode(new Uint8Array(keyPair.getPublic().getY().toArray()), null, 'base64url'),
-      "d": base64.encode(new Uint8Array(keyPair.getPrivate().toArray()), null, 'base64url'),
+      "x": base64.encode(new Uint8Array(keyPair.getPublic().getX().toArray('be', l)), null, 'base64url'),
+      "y": base64.encode(new Uint8Array(keyPair.getPublic().getY().toArray('be', l)), null, 'base64url'),
+      "d": base64.encode(new Uint8Array(keyPair.getPrivate().toArray('be', l)), null, 'base64url'),
       "use": "sig",
       "kid": "ECDSA Private Key"
     },
@@ -135,7 +136,7 @@ async function webSign(curve, hash_algo, message, keyPair) {
     ["sign"]
   );
 
-  return webCrypto.sign(
+  const signature = new Uint8Array(await webCrypto.sign(
     {
       "name": 'ECDSA',
       "namedCurve": curve.namedCurve,
@@ -143,11 +144,18 @@ async function webSign(curve, hash_algo, message, keyPair) {
     },
     key,
     message
-  );
+  ));
+  return {
+    r: signature.slice(0, l),
+    s: signature.slice(l, 2 * l)
+  };
 }
 
 async function webVerify(curve, hash_algo, signature, message, publicKey) {
-  signature = new Uint8Array(signature.r.toByteArray().concat(signature.s.toByteArray())).buffer;
+  var r = signature.r.toByteArray(), s = signature.s.toByteArray(), l = curve.pointSize;
+  r = (r.length === l) ? r : [0].concat(r);
+  s = (s.length === l) ? s : [0].concat(s);
+  signature = new Uint8Array(r.concat(s)).buffer;
   if (typeof message === 'string') {
     message = util.str2Uint8Array(message);
   }
@@ -156,8 +164,8 @@ async function webVerify(curve, hash_algo, signature, message, publicKey) {
     {
       "kty": "EC",
       "crv": curve.namedCurve,
-      "x": base64.encode(new Uint8Array(publicKey.getX().toArray()), null, 'base64url'),
-      "y": base64.encode(new Uint8Array(publicKey.getY().toArray()), null, 'base64url'),
+      "x": base64.encode(new Uint8Array(publicKey.getX().toArray('be', l)), null, 'base64url'),
+      "y": base64.encode(new Uint8Array(publicKey.getY().toArray('be', l)), null, 'base64url'),
       "use": "sig",
       "kid": "ECDSA Public Key"
     },
