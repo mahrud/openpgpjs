@@ -434,6 +434,7 @@ Key.prototype.decryptKeyPacket = function(keyIds, passphrase) {
  * @return {module:enums.keyStatus} The status of the primary key
  */
 Key.prototype.verifyPrimaryKey = async function() {
+  // FIXME should we check the expiration date of a revocation signature?
   // check revocation signature
   if (this.revocationSignature && !this.revocationSignature.isExpired() &&
      (this.revocationSignature.verified ||
@@ -546,7 +547,6 @@ Key.prototype.getPrimaryUser = function() {
  * the destination key is tranformed to a private key.
  * @param  {module:key~Key} key source key to merge
  */
-// FIXME
 Key.prototype.update = async function(key) {
   var that = this;
   if (await key.verifyPrimaryKey() === enums.keyStatus.invalid) {
@@ -568,6 +568,7 @@ Key.prototype.update = async function(key) {
     }
     this.primaryKey = key.primaryKey;
   }
+  // FIXME should we check the expiration date of a revocation signature?
   // revocation signature
   if (!this.revocationSignature && key.revocationSignature && !key.revocationSignature.isExpired() &&
      (key.revocationSignature.verified ||
@@ -740,19 +741,17 @@ User.prototype.toPacketlist = function() {
  * @param  {module:packet/secret_key|module:packet/public_key} primaryKey  The primary key packet
  * @return {Boolean}                                         True if the certificate is revoked
  */
-// FIXME
-User.prototype.isRevoked = function(certificate, primaryKey) {
+User.prototype.isRevoked = async function(certificate, primaryKey) {
   if (this.revocationCertifications) {
     var that = this;
     return this.revocationCertifications.some(function(revCert) {
-      return revCert.issuerKeyId.equals(certificate.issuerKeyId) && !revCert.isExpired() &&
-          (revCert.verified ||
-           revCert.verify(
-             primaryKey, {userid: that.userId || that.userAttribute, key: primaryKey}
-           ));
+      return revCert.issuerKeyId.equals(certificate.issuerKeyId) &&
+        !revCert.isExpired() &&
+        (revCert.verified ||
+         revCert.verify(primaryKey, { userid: that.userId || that.userAttribute, key: primaryKey }));
     });
   } else {
-    return Promise.resolve().then(() => { return false; });
+    return false;
   }
 };
 
@@ -785,16 +784,14 @@ User.prototype.getValidSelfCertificate = function(primaryKey) {
  * @param  {module:packet/signature}  selfCertificate A self certificate of this user
  * @return {Boolean}
  */
-// FIXME
 User.prototype.isValidSelfCertificate = async function(primaryKey, selfCertificate) {
   if (this.isRevoked(selfCertificate, primaryKey)) {
     return false;
   }
-  if (!selfCertificate.isExpired() &&
-     (selfCertificate.verified ||
-      await selfCertificate.verify(
-        primaryKey,{userid: this.userId || this.userAttribute, key: primaryKey}
-      ))) {
+  if (!selfCertificate.isExpired() && (selfCertificate.verified ||
+       await selfCertificate.verify(
+         primaryKey,{userid: this.userId || this.userAttribute, key: primaryKey}
+       ))) {
     return true;
   }
   return false;
@@ -867,12 +864,12 @@ User.prototype.verifyAllSignatures = function(primaryKey, keys) {
  * @param  {module:packet/secret_key|module:packet/public_key} primaryKey The primary key packet
  * @return {module:enums.keyStatus} status of user
  */
-// FIXME what is the best design pattern?
 User.prototype.verify = async function(primaryKey) {
   if (!this.selfCertifications) {
     return enums.keyStatus.no_self_cert;
   }
   var that = this;
+  // FIXME what is the best design pattern?
   var results = [enums.keyStatus.invalid].concat(
     await Promise.all(this.selfCertifications.map(async function(selfCertification) {
       if (that.isRevoked(selfCertification, primaryKey)) {
@@ -898,7 +895,6 @@ User.prototype.verify = async function(primaryKey) {
  * @param  {module:key~User} user source user to merge
  * @param  {module:packet/signature} primaryKey primary key used for validation
  */
-// FIXME
 User.prototype.update = async function(user, primaryKey) {
   var that = this;
   // self signatures
@@ -978,9 +974,9 @@ SubKey.prototype.isValidSigningKey = async function(primaryKey) {
  * and valid binding signature
  * @return {module:enums.keyStatus} The status of the subkey
  */
-// FIXME what is the best design pattern?
 SubKey.prototype.verify = async function(primaryKey) {
   var that = this;
+  // FIXME should we check the expiration date of a revocation signature?
   // check subkey revocation signature
   if (this.revocationSignature && !this.revocationSignature.isExpired() &&
      (this.revocationSignature.verified ||
@@ -993,6 +989,7 @@ SubKey.prototype.verify = async function(primaryKey) {
     return enums.keyStatus.expired;
   }
   // check subkey binding signatures (at least one valid binding sig needed)
+  // FIXME what is the best design pattern?
   var results = [enums.keyStatus.invalid].concat(
     await Promise.all(this.bindingSignatures.map(async function(bindingSignature) {
     // check binding signature is not expired
@@ -1052,17 +1049,21 @@ SubKey.prototype.update = async function(subKey, primaryKey) {
       subKey.subKey.tag === enums.packet.secretSubkey) {
     this.subKey = subKey.subKey;
   }
-  // FIXME shouldn't this merge all signatures?
   // update missing binding signatures
   var that = this;
-  await Promise.all(subKey.bindingSignatures.slice(this.bindingSignature).map(async function(newSig) {
-    if (newSig.verified ||
-        await newSig.verify(
-          primaryKey, {key: primaryKey, bind: that.subKey}
-        )) {
-      that.bindingSignatures.push(newSig);
+  await Promise.all(subKey.bindingSignatures.map(async function(newBindingSignature) {
+    if (newBindingSignature.verified ||
+        await newBindingSignature.verify(primaryKey, {key: primaryKey, bind: that.subKey })) {
+      for (var i = 0; i < that.bindingSignatures.length; i++) {
+        if (that.bindingSignatures[i].issuerKeyId.equals(newBindingSignature.issuerKeyId)) {
+          that.bindingSignatures[i] = newBindingSignature;
+          return;
+        }
+      }
+      that.bindingSignatures.push(newBindingSignature);
     }
   }));
+  // FIXME should we check the expiration date of a revocation signature?
   // revocation signature
   if (!this.revocationSignature &&
       subKey.revocationSignature &&
@@ -1129,7 +1130,7 @@ export function readArmored(armoredText) {
 }
 
 /**
- * Generates a new OpenPGP key. Currently only supports RSA keys.
+ * Generates a new OpenPGP key. Supports RSA and ECC keys.
  * Primary and subkey will be of same type.
  * @param {module:enums.publicKey} [options.keyType=module:enums.publicKey.rsa_encrypt_sign]    to indicate what type of key to make.
  *                             RSA is 1. See {@link http://tools.ietf.org/html/rfc4880#section-9.1}
@@ -1155,12 +1156,14 @@ export function generate(options) {
     }
 
     if (options.keyType !== enums.publicKey.rsa_encrypt_sign &&
-        options.keyType !== enums.publicKey.ecdsa) { // RSA Encrypt-Only and RSA Sign-Only are deprecated and SHOULD NOT be generated
+        options.keyType !== enums.publicKey.ecdsa) {
+      // RSA Encrypt-Only and RSA Sign-Only are deprecated and SHOULD NOT be generated
       throw new Error('Unsupported key type');
     }
 
     if (options.subkeyType !== enums.publicKey.rsa_encrypt_sign &&
-        options.subkeyType !== enums.publicKey.ecdh) { // RSA Encrypt-Only and RSA Sign-Only are deprecated and SHOULD NOT be generated
+        options.subkeyType !== enums.publicKey.ecdh) {
+      // RSA Encrypt-Only and RSA Sign-Only are deprecated and SHOULD NOT be generated
       throw new Error('Unsupported subkey type');
     }
 
@@ -1335,6 +1338,7 @@ export function getPreferredSymAlgo(keys) {
     });
   });
   var prefAlgo = {prio: 0, algo: config.encryption_cipher};
+  // FIXME
   for (var algo in prioMap) {
     try {
       if (algo !== enums.symmetric.plaintext &&

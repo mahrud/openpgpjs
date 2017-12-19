@@ -27,7 +27,7 @@
 
 'use strict';
 
-import {ec as EC} from 'elliptic';
+import {ec as EC, eddsa as EdDSA} from 'elliptic';
 import {KeyPair} from './key.js';
 import BigInteger from '../jsbn.js';
 import config from '../../../config';
@@ -40,75 +40,77 @@ const nodeCrypto = util.getNodeCrypto();
 
 var webCurves = [], nodeCurves = [];
 if (webCrypto && config.use_native) {
-  // see https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API/Supported_algorithms
-  webCurves = ['P-256', 'P-384', 'P-521'];
+  webCurves = {
+    'p256': 'P-256',
+    'p384': 'P-384',
+    'p521': 'P-521'
+  };
 } else if (nodeCrypto && config.use_native) {
-  // FIXME make sure the name translations are correct
-  nodeCurves = nodeCrypto.getCurves();
+  var knownCurves = nodeCrypto.getCurves();
+  nodeCurves = {
+    'secp256k1': knownCurves.includes('secp256k1') ? 'secp256k1' : undefined,
+    'p256': knownCurves.includes('prime256v1') ? 'prime256v1' : undefined,
+    'p384': knownCurves.includes('secp384r1') ? 'secp384r1' : undefined,
+    'p521': knownCurves.includes('secp521r1') ? 'secp521r1' : undefined
+    // TODO add more here
+  };
 }
 
 const curves = {
   p256: {
     oid: util.bin2str([0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x03, 0x01, 0x07]),
-    pointSize: 66, // FIXME
-    namedCurve: 'P-256',
-    opensslCurve: 'prime256v1',
-    hashName: 'SHA-256',
     hash: enums.hash.sha256,
     cipher: enums.symmetric.aes128,
-    node: nodeCurves.includes('prime256v1'),
-    web: webCurves.includes('P-256')
+    node: nodeCurves.secp256r1,
+    web: webCurves.secp256r1,
+    payloadSize: 32
   },
   p384: {
     oid: util.bin2str([0x2B, 0x81, 0x04, 0x00, 0x22]),
-    pointSize: 48,
-    namedCurve: 'P-384',
-    opensslCurve: 'secp384r1', // FIXME
-    hashName: 'SHA-384',
     hash: enums.hash.sha384,
     cipher: enums.symmetric.aes192,
-    node: nodeCurves.includes('secp384r1'), // FIXME
-    web: webCurves.includes('P-384')
+    node: nodeCurves.secp384r1,
+    web: webCurves.secp384r1,
+    payloadSize: 48
   },
   p521: {
     oid: util.bin2str([0x2B, 0x81, 0x04, 0x00, 0x23]),
-    pointSize: 66,
-    namedCurve: 'P-521',
-    opensslCurve: 'secp521r1', // FIXME
-    hashName: 'SHA-512',
     hash: enums.hash.sha512,
     cipher: enums.symmetric.aes256,
-    node: nodeCurves.includes('secp521r1'), // FIXME
-    web: webCurves.includes('P-521')
+    node: nodeCurves.secp521r1,
+    web: webCurves.secp521r1,
+    payloadSize: 66
   },
   secp256k1: {
     oid: util.bin2str([0x2B, 0x81, 0x04, 0x00, 0x0A]),
-    pointSize: 66, // FIXME
-    namedCurve: 'SECP-256K1',
-    opensslCurve: 'secp256k1',
-    hashName: 'SHA-256',
     hash: enums.hash.sha256,
     cipher: enums.symmetric.aes128,
-    node: false, // FIXME nodeCurves.includes('secp256k1'),
-    // this is because jwk-to-pem does not support this curve.
-    web: false
+    node: false // FIXME when we replace jwk-to-pem or it supports this curve
   },
-  curve25519 : {},
-  ed25519 : {}
+  ed25519 : {
+    oid: util.bin2str([0x2B, 0x06, 0x01, 0x04, 0x01, 0xDA, 0x47, 0x0F, 0x01]),
+    hash: enums.hash.sha256,
+    cipher: enums.symmetric.aes128
+  },
+  curve25519 : {
+    oid: util.bin2str([0x2B, 0x06, 0x01, 0x04, 0x01, 0x97, 0x55, 0x01, 0x05, 0x01]),
+    hash: enums.hash.sha256,
+    cipher: enums.symmetric.aes128
+  }
 };
 
-function Curve(name, {oid, pointSize, hash, cipher, namedCurve, opensslCurve, hashName, node, web}) {
-  this.curve = new EC(name);
-  this.name = name;
-  this.oid = oid;
-  this.pointSize = pointSize;
-  this.hash = hash;
-  this.cipher = cipher;
-  this.namedCurve= namedCurve;
-  this.opensslCurve = opensslCurve;
-  this.hashName = hashName;
-  this.node = node;
-  this.web = web;
+function Curve(name, options) {
+  if (name === "ed25519") {
+    this.curve = new EdDSA(name);
+  } else {
+    this.curve = new EC(name);
+  }
+  this.oid = curves[name].oid;
+  this.hash = options.hash;
+  this.cipher = options.cipher;
+  this.node = options.node && curves[name].node;
+  this.web = options.web && curves[name].web;
+  this.payloadSize = curves[name].payloadSize;
 }
 
 Curve.prototype.keyFromPrivate = function (priv) {
@@ -122,9 +124,9 @@ Curve.prototype.keyFromPublic = function (pub) {
 Curve.prototype.genKeyPair = async function () {
   var keyPair;
   if (webCrypto && config.use_native && this.web) {
-    keyPair = await webGenKeyPair(this.namedCurve, "ECDSA"); // FIXME
+    keyPair = await webGenKeyPair(this.name, "ECDSA"); // FIXME
   } else if (nodeCrypto && config.use_native && this.node) {
-    keyPair = await nodeGenKeyPair(this.opensslCurve);
+    keyPair = await nodeGenKeyPair(this.name);
   } else {
     var r = this.curve.genKeyPair();
     keyPair = {
@@ -137,8 +139,13 @@ Curve.prototype.genKeyPair = async function () {
 
 
 function get(oid_or_name) {
-  for (var name in curves) {
-    if (curves[name].oid === oid_or_name || name === oid_or_name) {
+  var name;
+  if (enums.curve[oid_or_name]) {
+    name = enums.write(enums.curve, oid_or_name);
+    return new Curve(name, curves[name]);
+  }
+  for (name in curves) {
+    if (curves[name].oid === oid_or_name) {
       return new Curve(name, curves[name]);
     }
   }
@@ -171,11 +178,11 @@ module.exports = {
 //////////////////////////
 
 
-async function webGenKeyPair(namedCurve, algorithm) {
+async function webGenKeyPair(name, algorithm) {
   var webCryptoKey = await webCrypto.generateKey(
     {
       name: algorithm === "ECDH" ? "ECDH" : "ECDSA",
-      namedCurve: namedCurve
+      namedCurve: webCurves[name]
     },
     true,
     algorithm === "ECDH" ? ["deriveKey", "deriveBits"] : ["sign", "verify"]
@@ -193,8 +200,8 @@ async function webGenKeyPair(namedCurve, algorithm) {
   };
 }
 
-async function nodeGenKeyPair(opensslCurve) {
-  var ecdh = nodeCrypto.createECDH(opensslCurve);
+async function nodeGenKeyPair(name) {
+  var ecdh = nodeCrypto.createECDH(name === "secp256r1" ? "prime256v1" : name);
   await ecdh.generateKeys();
 
   return {
