@@ -338,7 +338,8 @@ function isValidSigningKeyPacket(keyPacket, signature) {
   return (keyPacket.algorithm === enums.read(enums.publicKey, enums.publicKey.dsa) ||
           keyPacket.algorithm === enums.read(enums.publicKey, enums.publicKey.rsa_sign) ||
           keyPacket.algorithm === enums.read(enums.publicKey, enums.publicKey.rsa_encrypt_sign) ||
-          keyPacket.algorithm === enums.read(enums.publicKey, enums.publicKey.ecdsa)) &&
+          keyPacket.algorithm === enums.read(enums.publicKey, enums.publicKey.ecdsa) ||
+          keyPacket.algorithm === enums.read(enums.publicKey, enums.publicKey.eddsa)) &&
          (!signature.keyFlags ||
           (signature.keyFlags[0] & enums.keyFlags.sign_data) !== 0);
 }
@@ -1148,7 +1149,11 @@ export function generate(options) {
   return Promise.resolve().then(() => {
 
     if (options.curve) {
-      options.keyType = options.keyType || enums.publicKey.ecdsa;
+      if (options.curve === 'ed25519') {
+        options.keyType = options.keyType || enums.publicKey.eddsa;
+      } else {
+        options.keyType = options.keyType || enums.publicKey.ecdsa;
+      }
       options.subkeyType = options.subkeyType || enums.publicKey.ecdh;
     } else {
       options.keyType = options.keyType || enums.publicKey.rsa_encrypt_sign;
@@ -1156,7 +1161,8 @@ export function generate(options) {
     }
 
     if (options.keyType !== enums.publicKey.rsa_encrypt_sign &&
-        options.keyType !== enums.publicKey.ecdsa) {
+        options.keyType !== enums.publicKey.ecdsa &&
+        options.keyType !== enums.publicKey.eddsa) {
       // RSA Encrypt-Only and RSA Sign-Only are deprecated and SHOULD NOT be generated
       throw new Error('Unsupported key type');
     }
@@ -1182,12 +1188,14 @@ export function generate(options) {
   function generateSecretKey() {
     secretKeyPacket = new packet.SecretKey();
     secretKeyPacket.algorithm = enums.read(enums.publicKey, options.keyType);
-    return secretKeyPacket.generate(options.numBits, options.curve);
+    var curve = options.curve === 'curve25519' ? 'ed25519' : options.curve;
+    return secretKeyPacket.generate(options.numBits, curve);
   }
 
   function generateSecretSubkey() {
     secretSubkeyPacket = new packet.SecretSubkey();
     secretSubkeyPacket.algorithm = enums.read(enums.publicKey, options.subkeyType);
+    var curve = options.curve === 'ed25519' ? 'curve25519' : options.curve;
     return secretSubkeyPacket.generate(options.numBits, options.curve);
   }
 }
@@ -1287,6 +1295,7 @@ async function wrapKeyObject(secretKeyPacket, secretSubkeyPacket, options) {
       signaturePacket.keyExpirationTime = options.keyExpirationTime;
       signaturePacket.keyNeverExpires = false;
     }
+    // FIXME should not sign userIds with curve25519
     await signaturePacket.sign(secretKeyPacket, dataToSign);
 
     packetlist.push(userIdPacket);

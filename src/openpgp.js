@@ -338,7 +338,7 @@ export function sign({ data, privateKeys, armor=true, detached=false}) {
  * @param  {CleartextMessage} message    cleartext message object with signatures
  * @param  {Signature} signature         (optional) detached signature for verification
  * @return {Promise<Object>}             cleartext with status of verified signatures in the form of:
- *                                         { data:String, signatures: [{ keyid:String, valid:Boolean }] }
+ *                                       { data:String, signatures: [{ keyid:String, valid:Boolean }] }
  * @static
  */
 export function verify({ message, publicKeys, signature=null }) {

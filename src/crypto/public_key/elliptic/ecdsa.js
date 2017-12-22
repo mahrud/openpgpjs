@@ -69,8 +69,8 @@ async function sign(oid, hash_algo, m, d) {
     signature = await key.sign(m, hash_algo);
   }
   return {
-    r: new BigInteger(signature.r),
-    s: new BigInteger(signature.s)
+    r: new BigInteger(signature.r.toArray()),
+    s: new BigInteger(signature.s.toArray())
   };
 }
 

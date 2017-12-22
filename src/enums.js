@@ -59,7 +59,8 @@ export default {
     elgamal: 16,
     dsa: 17,
     ecdh: 18,
-    ecdsa: 19
+    ecdsa: 19,
+    eddsa: 22
   },
 
   /** {@link http://tools.ietf.org/html/rfc4880#section-9.2|RFC4880, section 9.2}

@@ -27,18 +27,19 @@
 
 'use strict';
 
-import {ec as EC, eddsa as EdDSA} from 'elliptic';
-import {KeyPair} from './key.js';
-import BigInteger from '../jsbn.js';
+import { ec as EC, eddsa as EdDSA } from 'elliptic';
+import { KeyPair } from './key';
+import BigInteger from '../jsbn';
+import random from '../../random';
 import config from '../../../config';
-import enums from '../../../enums.js';
-import util from '../../../util.js';
-import base64 from '../../../encoding/base64.js';
+import enums from '../../../enums';
+import util from '../../../util';
+import base64 from '../../../encoding/base64';
 
 const webCrypto = util.getWebCrypto();
 const nodeCrypto = util.getNodeCrypto();
 
-var webCurves = [], nodeCurves = [];
+var webCurves = {}, nodeCurves = {};
 if (webCrypto && config.use_native) {
   webCurves = {
     'p256': 'P-256',
@@ -87,52 +88,70 @@ const curves = {
     cipher: enums.symmetric.aes128,
     node: false // FIXME when we replace jwk-to-pem or it supports this curve
   },
-  ed25519 : {
+  ed25519: {
     oid: util.bin2str([0x2B, 0x06, 0x01, 0x04, 0x01, 0xDA, 0x47, 0x0F, 0x01]),
-    hash: enums.hash.sha256,
-    cipher: enums.symmetric.aes128
+    hash: enums.hash.sha512,
+    keyType: enums.publicKey.eddsa
   },
-  curve25519 : {
+  curve25519: {
     oid: util.bin2str([0x2B, 0x06, 0x01, 0x04, 0x01, 0x97, 0x55, 0x01, 0x05, 0x01]),
     hash: enums.hash.sha256,
     cipher: enums.symmetric.aes128
+  },
+  brainpoolP256r1: { // TODO 1.3.36.3.3.2.8.1.1.7
+    oid: util.bin2str([0x2B, 0x24, 0x03, 0x03, 0x02, 0x08, 0x01, 0x01, 0x07])
+  },
+  brainpoolP512r1: { // TODO 1.3.36.3.3.2.8.1.1.13
+    oid: util.bin2str([0x2B, 0x24, 0x03, 0x03, 0x02, 0x08, 0x01, 0x01, 0x0D])
   }
 };
 
-function Curve(name, options) {
-  if (name === "ed25519") {
+function Curve(name, params) {
+  if (params.keyType === enums.publicKey.eddsa) {
     this.curve = new EdDSA(name);
+    this.keyType = enums.publicKey.eddsa;
   } else {
     this.curve = new EC(name);
+    this.keyType = enums.publicKey.ecdsa;
   }
   this.oid = curves[name].oid;
-  this.hash = options.hash;
-  this.cipher = options.cipher;
-  this.node = options.node && curves[name].node;
-  this.web = options.web && curves[name].web;
+  this.hash = params.hash;
+  this.cipher = params.cipher;
+  this.node = params.node && curves[name].node;
+  this.web = params.web && curves[name].web;
   this.payloadSize = curves[name].payloadSize;
 }
 
-Curve.prototype.keyFromPrivate = function (priv) {
-  return new KeyPair(this.curve, {priv: priv});
+Curve.prototype.keyFromPrivate = function (priv) { // Not for ed25519
+  return new KeyPair(this.curve, { priv: priv });
+};
+
+Curve.prototype.keyFromSecret = function (secret) { // Only for ed25519
+  return new KeyPair(this.curve, { secret: secret });
 };
 
 Curve.prototype.keyFromPublic = function (pub) {
-  return new KeyPair(this.curve, {pub: pub});
+  return new KeyPair(this.curve, { pub: pub });
 };
 
 Curve.prototype.genKeyPair = async function () {
-  var keyPair;
+  var r, keyPair;
   if (webCrypto && config.use_native && this.web) {
-    keyPair = await webGenKeyPair(this.name, "ECDSA"); // FIXME
+    keyPair = await webGenKeyPair(this.name, "ECDSA"); // FIXME is ECDH different?
   } else if (nodeCrypto && config.use_native && this.node) {
     keyPair = await nodeGenKeyPair(this.name);
   } else {
-    var r = this.curve.genKeyPair();
-    keyPair = {
-      pub: r.getPublic().encode(),
-      priv: r.getPrivate().toArray()
-    };
+    if (this.keyType === enums.publicKey.eddsa) {
+      keyPair = {
+        secret: util.hexidump(random.getRandomBytes(32))
+      };
+    } else {
+      r = this.curve.genKeyPair();
+      keyPair = {
+        pub: r.getPublic().encode(),
+        priv: r.getPrivate().toArray()
+      };
+    }
   }
   return new KeyPair(this.curve, keyPair);
 };
