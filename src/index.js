@@ -64,7 +64,7 @@ export { default as util } from './util';
  * @see module:packet
  * @name module:openpgp.packet
  */
-export { default as packet } from './packet';
+export { default as packet } from './packet/index';
 
 /**
  * @see module:type/mpi
@@ -124,13 +124,13 @@ export { default as config } from './config/config';
  * @see module:crypto
  * @name module:openpgp.crypto
  */
-export { default as crypto } from './crypto';
+export { default as crypto } from './crypto/index';
 
 /**
  * @see module:keyring
  * @name module:openpgp.Keyring
  */
-export { default as Keyring } from './keyring';
+export { default as Keyring } from './keyring/index';
 
 /**
  * @see module:worker/async_proxy

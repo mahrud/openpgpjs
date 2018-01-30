@@ -31,8 +31,8 @@
 'use strict';
 
 import random from './random.js';
-import cipher from './cipher';
-import publicKey from './public_key';
+import cipher from './cipher/index';
+import publicKey from './public_key/index';
 import type_ecdh_symkey from '../type/ecdh_symkey.js';
 import type_kdf_params from '../type/kdf_params.js';
 import type_mpi from '../type/mpi.js';

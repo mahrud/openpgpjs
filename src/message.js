@@ -26,12 +26,12 @@
 
 'use strict';
 
-import util from './util.js';
-import packet from './packet';
+import util from './util';
+import packet from './packet/index';
 import enums from './enums.js';
 import armor from './encoding/armor.js';
-import config from './config';
-import crypto from './crypto';
+import config from './config/index';
+import crypto from './crypto/index';
 import * as sigModule from './signature.js';
 import * as keyModule from './key.js';
 

@@ -13,7 +13,7 @@ import rsa from './rsa.js';
 /** @see module:crypto/public_key/elgamal */
 import elgamal from './elgamal.js';
 /** @see module:crypto/public_key/elliptic */
-import elliptic from './elliptic';
+import elliptic from './elliptic/index';
 /** @see module:crypto/public_key/dsa */
 import dsa from './dsa.js';
 

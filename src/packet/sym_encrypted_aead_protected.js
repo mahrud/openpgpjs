@@ -23,7 +23,7 @@
 'use strict';
 
 import util from '../util.js';
-import crypto from '../crypto';
+import crypto from '../crypto/index';
 import enums from '../enums.js';
 
 const VERSION = 1; // A one-octet version number of the data packet.

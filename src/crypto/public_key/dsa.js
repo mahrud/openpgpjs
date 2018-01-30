@@ -29,9 +29,9 @@
 
 import BigInteger from './jsbn.js';
 import random from '../random.js';
-import hashModule from '../hash';
+import hashModule from '../hash/index';
 import util from '../../util.js';
-import config from '../../config';
+import config from '../../config/index';
 
 export default function DSA() {
   // s1 = ((g**s) mod p) mod q

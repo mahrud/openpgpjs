@@ -30,9 +30,9 @@
 
 'use strict';
 
-import crypto from '../crypto';
+import crypto from '../crypto/index';
 import enums from '../enums.js';
-import config from '../config';
+import config from '../config/index';
 
 /**
  * @constructor

@@ -26,7 +26,7 @@
 
 import util from '../util.js';
 
-module.exports = ECDHSymmetricKey;
+export default ECDHSymmetricKey;
 
 /**
  * @constructor

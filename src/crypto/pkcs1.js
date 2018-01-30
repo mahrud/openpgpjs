@@ -30,7 +30,7 @@
 import random from './random.js';
 import util from '../util.js';
 import BigInteger from './public_key/jsbn.js';
-import hash from './hash';
+import hash from './hash/index';
 
 /**
  * ASN1 object identifiers for hashes (See {@link http://tools.ietf.org/html/rfc4880#section-5.2.2})

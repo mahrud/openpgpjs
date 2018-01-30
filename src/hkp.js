@@ -22,7 +22,7 @@
 
 'use strict';
 
-import config from './config';
+import config from './config/index';
 
 /**
  * Initialize the HKP client and configure it with the key server url and fetch function.

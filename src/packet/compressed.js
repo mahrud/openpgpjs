@@ -33,9 +33,9 @@
 
 import enums from '../enums.js';
 import util from '../util.js';
-import Zlib from '../compression/zlib.min.js';
-import RawInflate from '../compression/rawinflate.min.js';
-import RawDeflate from '../compression/rawdeflate.min.js';
+import Zlib from 'zlib';
+import RawInflate from 'rawinflate';
+import RawDeflate from 'rawdeflate';
 
 /**
  * @constructor

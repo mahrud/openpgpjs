@@ -45,7 +45,7 @@ import util from '../util.js';
 import type_ecdh_symkey from '../type/ecdh_symkey.js';
 import type_mpi from '../type/mpi.js';
 import enums from '../enums.js';
-import crypto from '../crypto';
+import crypto from '../crypto/index';
 
 /**
  * @constructor

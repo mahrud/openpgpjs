@@ -41,7 +41,7 @@
 import util from '../util.js';
 import type_s2k from '../type/s2k.js';
 import enums from '../enums.js';
-import crypto from '../crypto';
+import crypto from '../crypto/index';
 
 /**
  * @constructor

@@ -26,7 +26,7 @@
 
 'use strict';
 
-import hash from '../../hash';
+import hash from '../../hash/index';
 import curves from './curves.js';
 import BigInteger from '../jsbn.js';
 
@@ -65,7 +65,7 @@ async function verify(oid, hash_algo, signature, m, Q) {
   );
 }
 
-module.exports = {
+export default {
   sign: sign,
   verify: verify
 };

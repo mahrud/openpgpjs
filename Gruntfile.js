@@ -61,7 +61,7 @@ module.exports = function(grunt) {
               presets: ["env"]
             }]
           ],
-          plugin: [ 'browserify-derequire' ]
+          // plugin: [ 'browserify-derequire' ]
         }
       },
       openpgp_debug: {
@@ -84,7 +84,7 @@ module.exports = function(grunt) {
               presets: ["env"]
             }]
           ],
-          plugin: [ 'browserify-derequire' ]
+          // plugin: [ 'browserify-derequire' ]
         }
       },
       openpgp_browser: {
@@ -106,7 +106,7 @@ module.exports = function(grunt) {
               presets: ["env"]
             }]
           ],
-          plugin: [ 'browserify-derequire' ]
+          // plugin: [ 'browserify-derequire' ]
         }
       },
       worker: {
@@ -117,9 +117,6 @@ module.exports = function(grunt) {
       unittests: {
         files: {
           'test/lib/unittests-bundle.js': [ './test/unittests.js' ]
-        },
-        options: {
-          external: [ 'crypto', 'openpgp', '../../dist/openpgp' ]
         }
       }
     },

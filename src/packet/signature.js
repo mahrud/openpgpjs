@@ -34,7 +34,7 @@
 import util from '../util.js';
 import packet from './packet.js';
 import enums from '../enums.js';
-import crypto from '../crypto';
+import crypto from '../crypto/index';
 import type_mpi from '../type/mpi.js';
 import type_keyid from '../type/keyid.js';
 

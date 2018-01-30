@@ -1,10 +1,11 @@
 'use strict';
 
-var openpgp = typeof window !== 'undefined' && window.openpgp ? window.openpgp : require('../../dist/openpgp');
-
+var AES_CFB = require('asmcrypto.js').AES_CFB
+var openpgp = require('../../dist/openpgp');
 var chai = require('chai');
 chai.use(require('chai-as-promised'));
 var expect = chai.expect;
+
 
 describe('API functional testing', function() {
   var util = openpgp.util;
@@ -286,9 +287,9 @@ describe('API functional testing', function() {
           var rndm = openpgp.crypto.getPrefixRandom(algo);
 
           var symmencData = openpgp.crypto.cfb.encrypt(rndm, algo, util.str2Uint8Array(plaintext), symmKey, false);
-          var symmencData2 = asmCrypto.AES_CFB.encrypt(util.str2Uint8Array(plaintext), key);
+          var symmencData2 = AES_CFB.encrypt(util.str2Uint8Array(plaintext), key);
 
-          var decrypted = asmCrypto.AES_CFB.decrypt(symmencData, key);
+          var decrypted = AES_CFB.decrypt(symmencData, key);
           decrypted = decrypted.subarray(openpgp.crypto.cipher[algo].blockSize + 2, decrypted.length);
           expect(symmencData).to.equal(symmencData2);
 

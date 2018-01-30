@@ -22,9 +22,9 @@
 
 'use strict';
 
-import asmCrypto from 'asmcrypto-lite';
+import { AES_GCM } from 'asmcrypto.js';
 import util from '../util.js';
-import config from '../config';
+import config from '../config/index';
 
 const webCrypto = util.getWebCrypto(); // no GCM support in IE11, Safari 9
 const nodeCrypto = util.getNodeCrypto();
@@ -52,7 +52,7 @@ export function encrypt(cipher, plaintext, key, iv) {
   } else if (nodeCrypto && config.use_native) { // Node crypto library
     return nodeEncrypt(plaintext, key, iv);
   } else { // asm.js fallback
-    return Promise.resolve(asmCrypto.AES_GCM.encrypt(plaintext, key, iv));
+    return Promise.resolve(AES_GCM.encrypt(plaintext, key, iv));
   }
 }
 
@@ -74,7 +74,7 @@ export function decrypt(cipher, ciphertext, key, iv) {
   } else if (nodeCrypto && config.use_native) { // Node crypto library
     return nodeDecrypt(ciphertext, key, iv);
   } else { // asm.js fallback
-    return Promise.resolve(asmCrypto.AES_GCM.decrypt(ciphertext, key, iv));
+    return Promise.resolve(AES_GCM.decrypt(ciphertext, key, iv));
   }
 }
 

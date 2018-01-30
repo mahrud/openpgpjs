@@ -17,7 +17,7 @@
 
 // Implementation of RFC 3394 AES Key Wrap & Key Unwrap funcions
 
-import cipher from './cipher';
+import cipher from './cipher/index';
 
 function wrap(key, data) {
   var aes = new cipher["aes" + (key.length*8)](key);
@@ -125,7 +125,4 @@ function pack() {
   return new Uint8Array(buffer);
 }
 
-module.exports = {
-  wrap: wrap,
-  unwrap: unwrap
-};
+export default { wrap, unwrap };

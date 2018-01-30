@@ -24,7 +24,7 @@
 
 'use strict';
 
-import cipher from './cipher';
+import cipher from './cipher/index';
 
 export default {
 

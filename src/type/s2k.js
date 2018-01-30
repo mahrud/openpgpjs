@@ -33,7 +33,7 @@
 
 import enums from '../enums.js';
 import util from '../util.js';
-import crypto from '../crypto';
+import crypto from '../crypto/index';
 
 /**
  * @constructor

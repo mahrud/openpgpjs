@@ -27,7 +27,7 @@
 
 import util from '../util.js';
 
-module.exports = OID;
+export default OID;
 
 /**
  * @constructor

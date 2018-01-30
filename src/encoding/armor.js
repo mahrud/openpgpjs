@@ -26,7 +26,7 @@
 
 import base64 from './base64.js';
 import enums from '../enums.js';
-import config from '../config';
+import config from '../config/index';
 
 /**
  * Finds out which Ascii Armoring type is used. Throws error if unknown type.

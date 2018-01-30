@@ -9,7 +9,7 @@
 'use strict';
 
 import Rusha from 'rusha';
-import asmCrypto from 'asmcrypto-lite';
+import { SHA256 } from 'asmcrypto.js';
 import sha from './sha.js';
 import md5 from './md5.js';
 import ripemd from './ripe-md.js';
@@ -52,7 +52,7 @@ if(nodeCrypto) { // Use Node native crypto for all hash functions
     /** @see module:crypto/hash/sha.sha224 */
     sha224: sha.sha224,
     /** @see module:asmcrypto */
-    sha256: asmCrypto.SHA256.bytes,
+    sha256: SHA256.bytes,
     /** @see module:crypto/hash/sha.sha384 */
     sha384: sha.sha384,
     // TODO: compare sha512 in asmcrypto.js and jsSHA

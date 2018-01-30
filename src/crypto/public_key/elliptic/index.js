@@ -32,7 +32,7 @@ import ecdsa from './ecdsa';
 import eddsa from './eddsa';
 import ecdh from './ecdh';
 
-module.exports = {
+export default {
   ecdsa: ecdsa,
   eddsa: eddsa,
   ecdh: ecdh,

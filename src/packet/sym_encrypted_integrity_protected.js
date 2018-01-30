@@ -34,9 +34,9 @@
 
 'use strict';
 
-import asmCrypto from 'asmcrypto-lite';
+import { AES_CFB } from 'asmcrypto.js';
 import util from '../util.js';
-import crypto from '../crypto';
+import crypto from '../crypto/index';
 import enums from '../enums.js';
 
 const nodeCrypto = util.getNodeCrypto();
@@ -148,7 +148,7 @@ function aesEncrypt(algo, prefix, pt, key) {
   if(nodeCrypto) { // Node crypto library.
     return nodeEncrypt(algo, prefix, pt, key);
   } else { // asm.js fallback
-    return asmCrypto.AES_CFB.encrypt(util.concatUint8Array([prefix, pt]), key);
+    return AES_CFB.encrypt(util.concatUint8Array([prefix, pt]), key);
   }
 }
 
@@ -157,7 +157,7 @@ function aesDecrypt(algo, ct, key) {
   if(nodeCrypto) { // Node crypto library.
     pt = nodeDecrypt(algo, ct, key);
   } else { // asm.js fallback
-    pt = asmCrypto.AES_CFB.decrypt(ct, key);
+    pt = AES_CFB.decrypt(ct, key);
   }
   return pt.subarray(crypto.cipher[algo].blockSize + 2, pt.length); // Remove random prefix
 }

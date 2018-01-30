@@ -8,7 +8,7 @@
 'use strict';
 
 import util from '../util';
-import publicKey from './public_key';
+import publicKey from './public_key/index';
 import pkcs1 from './pkcs1.js';
 
 export default {

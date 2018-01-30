@@ -25,8 +25,8 @@
 
 'use strict';
 
-import config from './config';
-import packet from './packet';
+import config from './config/index';
+import packet from './packet/index';
 import enums from './enums.js';
 import armor from './encoding/armor.js';
 import * as sigModule from './signature.js';

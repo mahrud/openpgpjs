@@ -34,8 +34,8 @@
 
 import BigInteger from '../jsbn.js';
 import curves from './curves.js';
-import cipher from '../../cipher';
-import hash from '../../hash';
+import cipher from '../../cipher/index';
+import hash from '../../hash/index';
 import aes_kw from '../../aes_kw.js';
 import enums from '../../../enums.js';
 import util from '../../../util.js';
@@ -117,7 +117,7 @@ async function decrypt(oid, cipher_algo, hash_algo, V, C, d, fingerprint) {
   return new BigInteger(aes_kw.unwrap(Z, C));
 }
 
-module.exports = {
+export default {
   buildEcdhParam: buildEcdhParam,
   kdf: kdf,
   encrypt: encrypt,

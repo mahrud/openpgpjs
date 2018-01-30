@@ -47,7 +47,7 @@ function decode(msg) {
   throw new Error('Invalid padding');
 }
 
-module.exports = {
+export default {
   encode: encode,
   decode: decode
 };

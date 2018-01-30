@@ -26,7 +26,7 @@
 
 import enums from '../enums.js';
 
-module.exports = KDFParams;
+export default KDFParams;
 
 /**
  * @constructor

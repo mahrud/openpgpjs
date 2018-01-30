@@ -29,7 +29,7 @@
 import BigInteger from './jsbn.js';
 import util from '../../util.js';
 import random from '../random.js';
-import config from '../../config';
+import config from '../../config/index';
 
 function SecureRandom() {
   function nextBytes(byteArray) {

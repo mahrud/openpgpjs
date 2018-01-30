@@ -37,10 +37,10 @@ import ASN1 from 'asn1.js';
 import jwkToPem from 'jwk-to-pem';
 
 import curves from './curves';
-import hash from '../../hash';
+import hash from '../../hash/index';
 import util from '../../../util';
 import enums from '../../../enums';
-import config from '../../../config';
+import config from '../../../config/index';
 import base64 from '../../../encoding/base64';
 
 const webCrypto = util.getWebCrypto();
@@ -55,7 +55,7 @@ var ECDSASignature = ASN1.define('ECDSASignature', function() {
   );
 });
 
-function KeyPair(curve, options) {
+export function KeyPair(curve, options) {
   this.curve = curve;
   this.keyType = curve.curve.type === 'edwards' ? enums.publicKey.eddsa : enums.publicKey.ecdsa;
   this.keyPair = this.curve.keyPair(options);
@@ -116,7 +116,7 @@ KeyPair.prototype.isValid = function () {
   return this.keyPair.validate().result;
 };
 
-module.exports = {
+export default {
   KeyPair: KeyPair
 };
 

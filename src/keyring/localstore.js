@@ -24,7 +24,7 @@
 
 'use strict';
 
-import config from '../config';
+import config from '../config/index';
 import * as keyModule from '../key.js';
 import util from '../util.js';
 

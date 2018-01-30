@@ -31,7 +31,7 @@ import { ec as EC, eddsa as EdDSA } from 'elliptic';
 import { KeyPair } from './key';
 import BigInteger from '../jsbn';
 import random from '../../random';
-import config from '../../../config';
+import config from '../../../config/index';
 import enums from '../../../enums';
 import util from '../../../util';
 import OID from '../../../type/oid';
@@ -165,7 +165,7 @@ Curve.prototype.genKeyPair = async function () {
   return new KeyPair(this.curve, keyPair);
 };
 
-function get(oid_or_name) {
+export function get(oid_or_name) {
   var name;
   if (OID.prototype.isPrototypeOf(oid_or_name) &&
       enums.curve[oid_or_name.toHex()]) {
@@ -181,7 +181,7 @@ function get(oid_or_name) {
   throw new Error('Not valid curve');
 }
 
-async function generate(curve) {
+export async function generate(curve) {
   curve = get(curve);
   var keyPair = await curve.genKeyPair();
   return {
@@ -193,11 +193,11 @@ async function generate(curve) {
   };
 }
 
-function getPreferredHashAlgorithm(oid) {
+export function getPreferredHashAlgorithm(oid) {
   return curves[enums.write(enums.curve, oid.toHex())].hash;
 }
 
-module.exports = {
+export default {
   Curve: Curve,
   curves: curves,
   webCurves: webCurves,

@@ -26,7 +26,7 @@
 
 'use strict';
 
-import packet from './packet';
+import packet from './packet/index';
 import enums from './enums.js';
 import armor from './encoding/armor.js';
 

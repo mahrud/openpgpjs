@@ -15,7 +15,7 @@ import util from '../util';
 import packetParser from './packet.js';
 import * as packets from './all_packets.js';
 import enums from '../enums.js';
-import config from '../config';
+import config from '../config/index';
 
 /**
  * @constructor

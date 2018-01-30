@@ -18,8 +18,8 @@
 'use strict';
 
 import util from '../util.js';
-import crypto from '../crypto';
-import packet from '../packet';
+import crypto from '../crypto/index';
+import packet from '../packet/index';
 
 const INITIAL_RANDOM_SEED = 50000, // random bytes seeded to worker
     RANDOM_SEED_REQUEST = 20000; // random bytes seeded after worker request

@@ -4,7 +4,7 @@
 
 'use strict';
 
-import asmCrypto from 'asmcrypto-lite';
+import { AES_ECB } from 'asmcrypto.js';
 
 export default function aes(length) {
 
@@ -13,12 +13,12 @@ export default function aes(length) {
 
     this.encrypt = function(block) {
       block = Uint8Array.from(block);
-      return Array.from(asmCrypto.AES_ECB.encrypt(block, this.key, false));
+      return Array.from(AES_ECB.encrypt(block, this.key, false));
     };
 
     this.decrypt = function(block) {
       block = Uint8Array.from(block);
-      return Array.from(asmCrypto.AES_ECB.decrypt(block, this.key, false));
+      return Array.from(AES_ECB.decrypt(block, this.key, false));
     };
   };
 

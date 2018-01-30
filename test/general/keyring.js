@@ -1,7 +1,7 @@
 'use strict';
 
-var openpgp = typeof window != 'undefined' && window.openpgp ? window.openpgp : require('../../dist/openpgp');
 
+var openpgp = require('../../dist/openpgp');
 var keyring = new openpgp.Keyring(),
   chai = require('chai'),
   expect = chai.expect;

@@ -16,11 +16,11 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
-/* globals self: true */
+/* eslint-disable no-restricted-globals */
 
 self.window = {}; // to make UMD bundles work
 
-importScripts('openpgp.js');
+importScripts('openpgp_browser.js'); // FIXME
 var openpgp = window.openpgp;
 
 var MIN_SIZE_RANDOM_BUFFER = 40000;
@@ -101,4 +101,5 @@ function response(event) {
   }
   self.postMessage(event, openpgp.util.getTransferables.call(openpgp.util, event.data));
 }
+
 },{}]},{},[1]);

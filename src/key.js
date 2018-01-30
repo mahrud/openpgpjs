@@ -25,12 +25,12 @@
 
 'use strict';
 
-import packet from './packet';
+import packet from './packet/index';
 import enums from './enums.js';
 import armor from './encoding/armor.js';
-import config from './config';
+import config from './config/index';
 import util from './util';
-import crypto from './crypto';
+import crypto from './crypto/index';
 
 /**
  * @class

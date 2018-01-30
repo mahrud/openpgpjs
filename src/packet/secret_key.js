@@ -36,7 +36,7 @@
 import publicKey from './public_key.js';
 import enums from '../enums.js';
 import util from '../util.js';
-import crypto from '../crypto';
+import crypto from '../crypto/index';
 import type_s2k from '../type/s2k.js';
 import type_keyid from '../type/keyid.js';
 

@@ -5,11 +5,11 @@
 
 'use strict';
 
-import cipher from './cipher';
-import hash from './hash';
+import cipher from './cipher/index';
+import hash from './hash/index';
 import cfb from './cfb';
 import * as gcm from './gcm';
-import publicKey from './public_key';
+import publicKey from './public_key/index';
 import signature from './signature';
 import random from './random';
 import pkcs1 from './pkcs1';

@@ -40,7 +40,7 @@ import type_kdf_params from '../type/kdf_params.js';
 import type_keyid from '../type/keyid.js';
 import type_oid from '../type/oid.js';
 import enums from '../enums.js';
-import crypto from '../crypto';
+import crypto from '../crypto/index';
 
 /**
  * @constructor
